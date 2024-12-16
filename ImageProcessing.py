@@ -1,6 +1,7 @@
+from collections import deque
+
 import cv2
 import numpy as np
-from collections import deque
 from sklearn.cluster import KMeans
 
 class ImageProcessing:
@@ -15,22 +16,27 @@ class ImageProcessing:
         self.memory.append(np.maximum(0, x))
 
     def blur(self):
-        kernel = self.__len__()
-        blur = cv2.blur(self.image, (kernel, kernel))
+        kernel_size = self.get_average_memory_value()
 
+        if kernel_size < 1:
+            kernel_size = 1
+
+        blur = cv2.blur(self.image, (kernel_size, kernel_size))
         return blur
 
+    def brightness(self):
+        beta_normalized = (self.get_average_memory_value() - 20) * ((100 - (-100)) / (220 - 20)) + 1
+        beta = np.clip(beta_normalized, -100, 100)
+        adjusted = cv2.convertScaleAbs(self.image, alpha=1.0, beta=beta)
+        return adjusted
+
+    def contrast(self):
+        alpha_normalized = (self.get_average_memory_value() - 20) * ((3 - 0.1) / (220 - 20)) + 1
+        alpha = np.clip(alpha_normalized, 0.1, 3.0)
+        adjusted = cv2.convertScaleAbs(self.image, alpha=alpha, beta=0)
+        return adjusted
+
     def imagesegmentation(self):
-        # self.__len__()
-        # self.setpanjang(10)
-        # self.setpanjang(10)
-        # self.setpanjang(10)
-
-        # min = np.min(self.memory)
-        # max = np.max(self.memory)
-
-        # normalized_data = int((self.__len__() - min) / (max - min) * (10 - 2) + 2)
-
         new_image = np.array(self.image)
         reshape_image = new_image.reshape(-1, 3)
         kmeans = KMeans(n_clusters=4, n_init=10)
@@ -41,15 +47,18 @@ class ImageProcessing:
 
         return segmented_img / 255
 
-    def edgedetectiion(self):
+    def edgedetection(self):
         img_grey = cv2.cvtColor(self.image, cv2.COLOR_BGR2GRAY)
 
-        G_x = np.array([[1,0,-1], [2,0,-2], [1,0,-1]]) * image.reshape(3, -1)
-        G_y = np.array([[1,0,-1], [0,0,0], [-1,-2,-1]]) * image.reshape(3, -1)
+        G_x = cv2.Sobel(img_grey, cv2.CV_64F, 1, 0, ksize=3)
+        G_y = cv2.Sobel(img_grey, cv2.CV_64F, 0, 1, ksize=3)
 
         G = np.sqrt(np.square(G_x) + np.square(G_y))
+        G = np.uint8(np.absolute(G))
 
         return G
 
-    def __len__(self):
-        return int(np.mean(self.memory))
+    def get_average_memory_value(self):
+        if len(self.memory) > 0:
+            return int(np.mean(self.memory))
+        return 0
