@@ -98,5 +98,3 @@ Proyek ini berhasil menyediakan kontrol pemrosesan gambar yang responsif dan int
 - **Pengujian Pengguna**: Melakukan pengujian lebih lanjut untuk mengevaluasi pengalaman pengguna dalam berbagai kondisi.
 
 ---
-
-Semoga README ini sesuai dengan kebutuhan Anda untuk proyek **HandTweak**!
